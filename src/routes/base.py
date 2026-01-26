@@ -1,5 +1,6 @@
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter, FastAPI, Depends
 import os
+from helpers.config import Get_Settings, Settings
 
 base_router = APIRouter(
     prefix="/api/v1",
@@ -8,9 +9,10 @@ base_router = APIRouter(
 
 
 @base_router.get("/")
-async def base_root():
-    app_name = os.getenv("APP_NAME")
-    app_version = os.getenv("APP_VERSION")
+async def base_root(app_settings: Settings = Depends(Get_Settings)):
+
+    app_name = app_settings.APP_NAME
+    app_version = app_settings.APP_VERSION
 
     return {
         "message": "Hello All!",
