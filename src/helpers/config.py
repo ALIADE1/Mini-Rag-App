@@ -1,4 +1,4 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -10,10 +10,9 @@ class Settings(BaseSettings):
     MAX_FILE_SIZE_MB: int
     FILE_DEFAULT_CHUNK_SIZE: int
 
-
     class Config:
         env_file = ".env"
 
 
-def Get_Settings():
+def get_settings():
     return Settings()
