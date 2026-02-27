@@ -1,46 +1,58 @@
 from .BaseController import BaseController
+from .ProjectController import ProjectController
 import os
+from langchain_community.document_loaders import TextLoader
+from langchain_community.document_loaders import PyMuPDFLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from src.models import ProcessingEnum
 
 
 class ProcessController(BaseController):
     def __init__(self, project_id: str):
         super().__init__()
-        self.project_id = project_id
-        self.project_path = os.path.join(self.file_dir, project_id)
 
-    def get_file_content(self, file_id: str):
+        self.project_id = project_id
+        self.project_path = ProjectController().get_project_path(project_id=project_id)
+
+    def get_file_extension(self, file_id: str):
+        return os.path.splitext(file_id)[-1]
+
+    def get_file_loader(self, file_id: str):
+
+        file_ext = self.get_file_extension(file_id=file_id)
         file_path = os.path.join(self.project_path, file_id)
 
-        if not os.path.exists(file_path):
-            return None
+        if file_ext == ProcessingEnum.TXT.value:
+            return TextLoader(file_path, encoding="utf-8")
 
-        with open(file_path, "r", encoding="utf-8") as f:
-            return f.read()
+        if file_ext == ProcessingEnum.PDF.value:
+            return PyMuPDFLoader(file_path)
+
+        return None
+
+    def get_file_content(self, file_id: str):
+
+        loader = self.get_file_loader(file_id=file_id)
+        return loader.load()
 
     def process_file_content(
         self,
-        file_content: str,
+        file_content: list,
         file_id: str,
-        chunk_size: int = 500,
-        overlap_size: int = 50,
+        chunk_size: int = 100,
+        overlap_size: int = 20,
     ):
-        if file_content is None or len(file_content) == 0:
-            return None
 
-        chunks = []
-        start = 0
-        content_length = len(file_content)
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=chunk_size, chunk_overlap=overlap_size, length_function=len
+        )
 
-        while start < content_length:
-            end = start + chunk_size
-            chunk = file_content[start:end]
-            chunks.append(
-                {
-                    "file_id": file_id,
-                    "chunk_index": len(chunks),
-                    "chunk_content": chunk,
-                }
-            )
-            start += chunk_size - overlap_size
+        file_content_texts = [rec.page_content for rec in file_content]
+
+        file_content_metadata = [rec.metadata for rec in file_content]
+
+        chunks = text_splitter.create_documents(
+            file_content_texts, metadatas=file_content_metadata
+        )
 
         return chunks

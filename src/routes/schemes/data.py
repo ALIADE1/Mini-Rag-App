@@ -6,3 +6,4 @@ class ProcessRequest(BaseModel):
     file_id: str
     chunk_size: Optional[int] = 500
     overlap_size: Optional[int] = 50
+    do_reset: Optional[bool] = False
