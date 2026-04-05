@@ -6,6 +6,7 @@ import aiofiles
 from ..models import ResponseSignal
 import logging
 from .schemes.data import ProcessRequest
+from models.ProjectModel import ProjectModel
 
 logger = logging.getLogger("uvicorn.error")
 
